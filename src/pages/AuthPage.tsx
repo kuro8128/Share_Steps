@@ -1,7 +1,7 @@
 import { FormEvent, useState } from 'react';
-import { Footprints, LogIn, UserPlus } from 'lucide-react';
+import { DoorOpen, Footprints, LogIn, UserPlus } from 'lucide-react';
 import { Message } from '../components/Message';
-import { signIn, signUp } from '../lib/api';
+import { signIn, signInAsGuest, signUp } from '../lib/api';
 
 type AuthPageProps = {
   mode: 'login' | 'signup';
@@ -11,9 +11,12 @@ type AuthPageProps = {
 export function AuthPage({ mode, navigate }: AuthPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [guestName, setGuestName] = useState('');
+  const [guestInviteCode, setGuestInviteCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [guestLoading, setGuestLoading] = useState(false);
   const isSignup = mode === 'signup';
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -39,6 +42,22 @@ export function AuthPage({ mode, navigate }: AuthPageProps) {
     }
   }
 
+  async function handleGuestSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setNotice(null);
+    setGuestLoading(true);
+
+    try {
+      const groupId = await signInAsGuest(guestName, guestInviteCode);
+      navigate(groupId ? `/groups/${groupId}` : '/');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'ゲスト開始に失敗しました。');
+    } finally {
+      setGuestLoading(false);
+    }
+  }
+
   return (
     <main className="auth-screen">
       <section className="auth-panel">
@@ -50,6 +69,37 @@ export function AuthPage({ mode, navigate }: AuthPageProps) {
             <h1>Share Steps</h1>
             <p>友達グループで今日の歩数を共有</p>
           </div>
+        </div>
+
+        <form className="form-stack guest-start" onSubmit={handleGuestSubmit}>
+          <h2>ゲストで始める</h2>
+          <label>
+            名前
+            <input
+              autoComplete="nickname"
+              placeholder="例: みな"
+              required
+              value={guestName}
+              onChange={(event) => setGuestName(event.target.value)}
+            />
+          </label>
+          <label>
+            参加コード
+            <input
+              autoCapitalize="characters"
+              placeholder="グループ参加時のみ"
+              value={guestInviteCode}
+              onChange={(event) => setGuestInviteCode(event.target.value.toUpperCase())}
+            />
+          </label>
+          <button className="primary-button" disabled={guestLoading} type="submit">
+            <DoorOpen size={18} aria-hidden="true" />
+            <span>{guestLoading ? '開始中...' : guestInviteCode.trim() ? 'グループに参加' : '一人で始める'}</span>
+          </button>
+        </form>
+
+        <div className="auth-divider">
+          <span>または</span>
         </div>
 
         <form className="form-stack" onSubmit={handleSubmit}>

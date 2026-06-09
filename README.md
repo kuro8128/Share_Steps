@@ -4,6 +4,8 @@
 
 ## 実装機能
 
+- 名前だけで始められるゲスト利用
+- 参加コードと名前だけでグループ参加
 - メールアドレスとパスワードによる新規登録、ログイン、ログアウト
 - プロフィール編集: ユーザー名、1日の目標歩数
 - 今日の歩数登録、登録済みの場合の更新、達成状況表示
@@ -47,6 +49,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
    - `supabase/03_rls_policies.sql`
    - `supabase/04_indexes.sql`
 5. Authentication > Providers で Email が有効になっていることを確認します。
+6. Authentication > Providers で Anonymous Sign-Ins を有効にします。ゲスト利用はSupabaseの匿名認証ユーザーとして保存されます。
 
 SQLには以下が含まれています。
 
@@ -59,6 +62,8 @@ SQLには以下が含まれています。
 - Row Level Security とMVP用ポリシー
 
 招待コード参加は、全グループを検索可能にするRLSではなく、`join_group_by_invite_code` RPCで安全に処理しています。存在しない招待コードと参加済みグループはエラーになります。
+
+ゲストはSupabase Authの匿名ユーザーとして作成され、通常ユーザーと同じ `profiles`、`group_members`、`step_records` に保存されます。そのためDB上ではメール登録ユーザーと同じRLS・ランキング処理を利用します。
 
 ## ビルド
 
