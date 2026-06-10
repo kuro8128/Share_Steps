@@ -15,7 +15,7 @@ export function GroupDetailPage({ groupId, navigate }: GroupDetailPageProps) {
   const today = useMemo(() => getTodayDateString(), []);
   const [group, setGroup] = useState<Group | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
-  const [ranking, setRanking] = useState<RankingRow[]>([]);
+  const [rankingData, setRankingData] = useState<RankingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -41,7 +41,7 @@ export function GroupDetailPage({ groupId, navigate }: GroupDetailPageProps) {
         if (!ignore) {
           setGroup(groupRow);
           setMembers(memberRows);
-          setRanking(rankingRows);
+          setRankingData(rankingRows);
         }
       } catch (err) {
         if (!ignore) {
@@ -73,6 +73,15 @@ export function GroupDetailPage({ groupId, navigate }: GroupDetailPageProps) {
       setNotice('招待コードを選択してコピーしてください。');
     }
   }
+
+  const ranking = useMemo(() => {
+    if (rankingData.length === 0) return [];
+    const maxSteps = Math.max(...rankingData.map(r => r.steps), 1);
+    return rankingData.map(row => ({
+      ...row,
+      percent: Math.min((row.steps / maxSteps) * 100, 100)
+    }));
+  }, [rankingData]);
 
   return (
     <section className="page-stack">
@@ -129,13 +138,15 @@ export function GroupDetailPage({ groupId, navigate }: GroupDetailPageProps) {
               ) : (
                 <div className="ranking-list">
                   {ranking.map((row) => (
-                    <div className="ranking-row" key={row.userId}>
-                      <span className="rank-number">{row.rank}</span>
-                      <span className="ranking-user">
-                        <strong>{row.username}</strong>
-                        <small>{row.achieved ? '達成' : `あと ${Math.max(row.targetSteps - row.steps, 0).toLocaleString()}歩`}</small>
-                      </span>
-                      <span className="ranking-steps">{row.steps.toLocaleString()}歩</span>
+                    <div className="ranking-viz-row" key={row.userId}>
+                      <span className="viz-username">{row.username}</span>
+                      <div className="viz-bar-container">
+                        <div 
+                          className={`viz-bar ${row.achieved ? 'achieved' : ''}`} 
+                          style={{ width: `${row.percent}%` }}
+                        />
+                      </div>
+                      <span className="viz-value">{row.steps.toLocaleString()}</span>
                     </div>
                   ))}
                 </div>

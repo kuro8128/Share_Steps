@@ -425,6 +425,52 @@ small {
   font-weight: 700;
 }
 
+.ranking-viz-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 60px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #fbfcfe;
+  border: 1px solid #e3e8ef;
+  border-radius: 8px;
+}
+
+.viz-username {
+  font-weight: 800;
+  color: #14213d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.9rem;
+}
+
+.viz-bar-container {
+  height: 12px;
+  background: #eef2f6;
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.viz-bar {
+  height: 100%;
+  background: #687587;
+  border-radius: 6px;
+  transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.viz-bar.achieved {
+  background: #0b7a75;
+}
+
+.viz-value {
+  font-weight: 900;
+  color: #14213d;
+  text-align: right;
+  font-size: 0.9rem;
+}
+
 @media (max-width: 760px) {
   .topbar {
     align-items: flex-start;
@@ -441,9 +487,20 @@ small {
   }
 
   .invite-band,
-  .ranking-row {
+  .ranking-viz-row {
     align-items: stretch;
     flex-direction: column;
+    gap: 8px;
+  }
+
+  .ranking-viz-row {
+    grid-template-columns: 1fr;
+  }
+
+  .viz-value {
+    text-align: left;
+    font-size: 0.8rem;
+    color: #687587;
   }
 
   .ranking-steps {
