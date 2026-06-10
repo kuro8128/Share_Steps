@@ -8,7 +8,7 @@ import { GroupsPage } from './pages/GroupsPage';
 import { HomePage } from './pages/HomePage';
 import { MyPage } from './pages/MyPage';
 import { ensureProfile } from './lib/api';
-import { hasSupabaseConfig, supabase } from './lib/supabase';
+import { hasSupabaseConfig, missingSupabaseEnvNames, supabase } from './lib/supabase';
 import type { Profile } from './types';
 
 function getCurrentPath() {
@@ -105,7 +105,7 @@ export default function App() {
         <section className="auth-panel">
           <h1>Share Steps</h1>
           <Message
-            message=".env に VITE_SUPABASE_URL と VITE_SUPABASE_ANON_KEY を設定してください。"
+            message={`Supabase環境変数が読み込めていません: ${missingSupabaseEnvNames.join(', ')}。Vercelでは Environment Variables に設定後、再デプロイしてください。`}
             tone="error"
           />
         </section>
