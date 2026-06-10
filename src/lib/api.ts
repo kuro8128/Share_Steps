@@ -7,18 +7,6 @@ type GroupMemberRow = {
   group_id: string;
   user_id: string;
   joined_at: string;
-  profiles:
-    | {
-        id: string;
-        username: string;
-        target_steps: number;
-      }
-    | {
-        id: string;
-        username: string;
-        target_steps: number;
-      }[]
-    | null;
 };
 
 function getErrorMessage(error: unknown) {
@@ -38,9 +26,10 @@ function generateInviteCode() {
     .join('');
 }
 
-function normalizeMember(row: GroupMemberRow): GroupMember {
-  const profile = Array.isArray(row.profiles) ? row.profiles[0] ?? null : row.profiles;
-
+function normalizeMember(
+  row: GroupMemberRow,
+  profile: Pick<Profile, 'id' | 'username' | 'target_steps'> | null,
+): GroupMember {
   return {
     id: row.id,
     group_id: row.group_id,
@@ -233,17 +222,37 @@ export async function getGroup(groupId: string) {
 }
 
 export async function getGroupMembers(groupId: string) {
-  const { data, error } = await supabase
+  const { data: memberRows, error: membersError } = await supabase
     .from('group_members')
-    .select('id, group_id, user_id, joined_at, profiles(id, username, target_steps)')
+    .select('id, group_id, user_id, joined_at')
     .eq('group_id', groupId)
     .order('joined_at', { ascending: true });
 
-  if (error) {
-    throw new Error(error.message);
+  if (membersError) {
+    throw new Error(membersError.message);
   }
 
-  return ((data ?? []) as GroupMemberRow[]).map(normalizeMember);
+  const members = (memberRows ?? []) as GroupMemberRow[];
+  const memberIds = members.map((member) => member.user_id);
+
+  if (memberIds.length === 0) {
+    return [];
+  }
+
+  const { data: profileRows, error: profilesError } = await supabase
+    .from('profiles')
+    .select('id, username, target_steps')
+    .in('id', memberIds);
+
+  if (profilesError) {
+    throw new Error(profilesError.message);
+  }
+
+  const profilesById = new Map(
+    ((profileRows ?? []) as Pick<Profile, 'id' | 'username' | 'target_steps'>[]).map((profile) => [profile.id, profile]),
+  );
+
+  return members.map((member) => normalizeMember(member, profilesById.get(member.user_id) ?? null));
 }
 
 export async function getGroupRanking(groupId: string, date: string) {
