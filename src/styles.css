@@ -81,6 +81,59 @@ button:disabled {
   white-space: nowrap;
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+}
+
+.demo-date-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 5px 7px 5px 11px;
+  border: 1px solid #cfd7e2;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.demo-date-control.active {
+  border-color: #e5a000;
+  background: #fff8e6;
+}
+
+.demo-date-control label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #39495c;
+  white-space: nowrap;
+}
+
+.demo-date-control input {
+  width: auto;
+  min-height: 32px;
+  padding: 0 7px;
+  border: 0;
+  background: #ffffff;
+}
+
+.reset-date-button {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 9px;
+  color: #704d00;
+  background: #ffe7a3;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 .main-nav {
   display: flex;
   gap: 8px;
@@ -450,8 +503,25 @@ small {
 
 @media (max-width: 760px) {
   .topbar {
-    align-items: flex-start;
+    align-items: stretch;
+  }
+
+  .topbar-actions,
+  .demo-date-control {
+    align-items: stretch;
     flex-direction: column;
+  }
+
+  .topbar-actions {
+    gap: 9px;
+  }
+
+  .demo-date-control input {
+    width: 100%;
+  }
+
+  .signed-in-user {
+    text-align: right;
   }
 
   .stats-grid,

@@ -1,18 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowLeft, Copy, Trophy, Users } from 'lucide-react';
 import { EmptyState } from '../components/EmptyState';
 import { Message } from '../components/Message';
 import { getGroup, getGroupMembers, getGroupRanking } from '../lib/api';
-import { getTodayDateString } from '../lib/date';
 import type { Group, GroupMember, RankingRow } from '../types';
 
 type GroupDetailPageProps = {
+  date: string;
   groupId: string;
   navigate: (path: string) => void;
 };
 
-export function GroupDetailPage({ groupId, navigate }: GroupDetailPageProps) {
-  const today = useMemo(() => getTodayDateString(), []);
+export function GroupDetailPage({ date, groupId, navigate }: GroupDetailPageProps) {
   const [group, setGroup] = useState<Group | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [ranking, setRanking] = useState<RankingRow[]>([]);
@@ -31,7 +30,7 @@ export function GroupDetailPage({ groupId, navigate }: GroupDetailPageProps) {
         const [groupRow, memberRows, rankingRows] = await Promise.all([
           getGroup(groupId),
           getGroupMembers(groupId),
-          getGroupRanking(groupId, today),
+          getGroupRanking(groupId, date),
         ]);
 
         if (!groupRow) {
@@ -59,7 +58,7 @@ export function GroupDetailPage({ groupId, navigate }: GroupDetailPageProps) {
     return () => {
       ignore = true;
     };
-  }, [groupId, today]);
+  }, [date, groupId]);
 
   async function copyInviteCode() {
     if (!group) {
@@ -82,7 +81,7 @@ export function GroupDetailPage({ groupId, navigate }: GroupDetailPageProps) {
       </button>
 
       <div className="page-title">
-        <p>{today}</p>
+        <p>{date}</p>
         <h1>{group?.name ?? 'グループ詳細'}</h1>
       </div>
 
@@ -122,7 +121,7 @@ export function GroupDetailPage({ groupId, navigate }: GroupDetailPageProps) {
             <section className="panel">
               <div className="section-heading">
                 <Trophy size={22} aria-hidden="true" />
-                <h2>今日のランキング</h2>
+                <h2>この日のランキング</h2>
               </div>
               {ranking.length === 0 ? (
                 <EmptyState title="ランキングはまだありません" description="メンバーの歩数が読み込まれるとここに表示されます。" />
