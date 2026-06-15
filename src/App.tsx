@@ -8,6 +8,7 @@ import { GroupsPage } from './pages/GroupsPage';
 import { HomePage } from './pages/HomePage';
 import { MyPage } from './pages/MyPage';
 import { ensureProfile } from './lib/api';
+import { getInitialDemoDate, getTodayDateString, resetDemoDate, saveDemoDate } from './lib/date';
 import { hasSupabaseConfig, missingSupabaseEnvNames, supabase } from './lib/supabase';
 import type { Profile } from './types';
 
@@ -21,6 +22,8 @@ export default function App() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [demoDate, setDemoDate] = useState(getInitialDemoDate);
+  const actualToday = getTodayDateString();
 
   const groupId = useMemo(() => {
     const match = route.match(/^\/groups\/([^/]+)$/);
@@ -30,6 +33,19 @@ export default function App() {
   function navigate(path: string) {
     window.history.pushState({}, '', path);
     setRoute(path);
+  }
+
+  function changeDemoDate(date: string) {
+    if (!date) {
+      return;
+    }
+
+    saveDemoDate(date);
+    setDemoDate(date);
+  }
+
+  function restoreToday() {
+    setDemoDate(resetDemoDate());
   }
 
   useEffect(() => {
@@ -123,7 +139,15 @@ export default function App() {
 
   if (!profile) {
     return (
-      <Layout profile={profile} route={route} navigate={navigate}>
+      <Layout
+        actualToday={actualToday}
+        demoDate={demoDate}
+        profile={profile}
+        route={route}
+        navigate={navigate}
+        onDemoDateChange={changeDemoDate}
+        onRestoreToday={restoreToday}
+      >
         <section className="page-stack">
           <p className="loading-text">プロフィールを読み込み中...</p>
           <Message message={profileError} tone="error" />
@@ -133,10 +157,18 @@ export default function App() {
   }
 
   return (
-    <Layout profile={profile} route={route} navigate={navigate}>
-      {route === '/' ? <HomePage profile={profile} userId={session.user.id} /> : null}
+    <Layout
+      actualToday={actualToday}
+      demoDate={demoDate}
+      profile={profile}
+      route={route}
+      navigate={navigate}
+      onDemoDateChange={changeDemoDate}
+      onRestoreToday={restoreToday}
+    >
+      {route === '/' ? <HomePage date={demoDate} profile={profile} userId={session.user.id} /> : null}
       {route === '/groups' ? <GroupsPage userId={session.user.id} navigate={navigate} /> : null}
-      {groupId ? <GroupDetailPage groupId={groupId} navigate={navigate} /> : null}
+      {groupId ? <GroupDetailPage date={demoDate} groupId={groupId} navigate={navigate} /> : null}
       {route === '/mypage' ? <MyPage profile={profile} onProfileUpdated={setProfile} /> : null}
       {!['/', '/groups', '/mypage'].includes(route) && !groupId ? (
         <section className="page-stack">

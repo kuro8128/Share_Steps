@@ -65,6 +65,45 @@ export async function signIn(email: string, password: string) {
   return data;
 }
 
+export async function signInAsGuest(username: string, inviteCode?: string) {
+  const trimmedUsername = username.trim();
+
+  if (!trimmedUsername) {
+    throw new Error('名前を入力してください。');
+  }
+
+  const { data, error } = await supabase.auth.signInAnonymously({
+    options: {
+      data: {
+        username: trimmedUsername,
+      },
+    },
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const user = data.user ?? data.session?.user;
+  if (!user) {
+    throw new Error('ゲストの開始に失敗しました。');
+  }
+
+  try {
+    await ensureProfile(user, trimmedUsername);
+
+    const trimmedInviteCode = inviteCode?.trim();
+    if (!trimmedInviteCode) {
+      return null;
+    }
+
+    return await joinGroupByInviteCode(trimmedInviteCode);
+  } catch (err) {
+    await supabase.auth.signOut();
+    throw err;
+  }
+}
+
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
 
@@ -83,14 +122,18 @@ export async function getMyProfile(userId: string) {
   return data as Profile | null;
 }
 
-export async function ensureProfile(user: User) {
+export async function ensureProfile(user: User, preferredUsername?: string) {
   const existing = await getMyProfile(user.id);
 
   if (existing) {
     return existing;
   }
 
-  const username = user.email?.split('@')[0] || 'ユーザー';
+  const username =
+    preferredUsername?.trim() ||
+    (typeof user.user_metadata.username === 'string' ? user.user_metadata.username.trim() : '') ||
+    user.email?.split('@')[0] ||
+    'ゲスト';
   const { data, error } = await supabase
     .from('profiles')
     .insert({ id: user.id, username, target_steps: 8000 })

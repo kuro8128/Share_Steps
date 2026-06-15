@@ -2,18 +2,17 @@ import { FormEvent, useEffect, useState } from 'react';
 import { CheckCircle2, Footprints, Target, Save } from 'lucide-react';
 import { Message } from '../components/Message';
 import { StatCard } from '../components/StatCard';
-import { getTodayDateString } from '../lib/date';
 import { getTodayStep, upsertTodayStep } from '../lib/api';
 import { parseNonNegativeInteger } from '../lib/validation';
 import type { Profile, StepRecord } from '../types';
 
 type HomePageProps = {
+  date: string;
   userId: string;
   profile: Profile;
 };
 
-export function HomePage({ userId, profile }: HomePageProps) {
-  const today = getTodayDateString();
+export function HomePage({ date, userId, profile }: HomePageProps) {
   const [stepRecord, setStepRecord] = useState<StepRecord | null>(null);
   const [stepsInput, setStepsInput] = useState('');
   const [loading, setLoading] = useState(true);
@@ -32,7 +31,7 @@ export function HomePage({ userId, profile }: HomePageProps) {
       setError(null);
 
       try {
-        const record = await getTodayStep(userId, today);
+        const record = await getTodayStep(userId, date);
         if (!ignore) {
           setStepRecord(record);
           setStepsInput(record?.steps.toString() ?? '');
@@ -53,7 +52,7 @@ export function HomePage({ userId, profile }: HomePageProps) {
     return () => {
       ignore = true;
     };
-  }, [today, userId]);
+  }, [date, userId]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -63,9 +62,9 @@ export function HomePage({ userId, profile }: HomePageProps) {
 
     try {
       const parsedSteps = parseNonNegativeInteger(stepsInput, '歩数');
-      const saved = await upsertTodayStep(userId, today, parsedSteps);
+      const saved = await upsertTodayStep(userId, date, parsedSteps);
       setStepRecord(saved);
-      setNotice('今日の歩数を保存しました。');
+      setNotice(`${date} の歩数を保存しました。`);
     } catch (err) {
       setError(err instanceof Error ? err.message : '歩数の保存に失敗しました。');
     } finally {
@@ -76,7 +75,7 @@ export function HomePage({ userId, profile }: HomePageProps) {
   return (
     <section className="page-stack">
       <div className="page-title">
-        <p>{today}</p>
+        <p>{date}</p>
         <h1>ホーム</h1>
       </div>
 
@@ -85,12 +84,12 @@ export function HomePage({ userId, profile }: HomePageProps) {
       <Message message={notice} tone="success" />
 
       <div className="stats-grid">
-        <StatCard label="今日の歩数" value={`${steps.toLocaleString()}歩`} icon={<Footprints size={22} aria-hidden="true" />} />
+        <StatCard label="この日の歩数" value={`${steps.toLocaleString()}歩`} icon={<Footprints size={22} aria-hidden="true" />} />
         <StatCard label="目標歩数" value={`${profile.target_steps.toLocaleString()}歩`} icon={<Target size={22} aria-hidden="true" />} />
         <StatCard
           label="達成状況"
           value={achieved ? '達成' : '未達成'}
-          detail={achieved ? '今日の目標をクリアしています。' : `${Math.max(profile.target_steps - steps, 0).toLocaleString()}歩で達成`}
+          detail={achieved ? 'この日の目標をクリアしています。' : `${Math.max(profile.target_steps - steps, 0).toLocaleString()}歩で達成`}
           icon={<CheckCircle2 size={22} aria-hidden="true" />}
         />
       </div>
@@ -98,7 +97,7 @@ export function HomePage({ userId, profile }: HomePageProps) {
       <form className="panel form-stack" onSubmit={handleSubmit}>
         <h2>歩数登録</h2>
         <label>
-          今日の歩数
+          この日の歩数
           <input
             inputMode="numeric"
             min={0}

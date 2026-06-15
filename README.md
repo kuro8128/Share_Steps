@@ -4,6 +4,8 @@
 
 ## 実装機能
 
+- 名前だけで始められるゲスト利用
+- 参加コードと名前だけでグループ参加
 - メールアドレスとパスワードによる新規登録、ログイン、ログアウト
 - プロフィール編集: ユーザー名、1日の目標歩数
 - 今日の歩数登録、登録済みの場合の更新、達成状況表示
@@ -49,6 +51,7 @@ Vercel Supabase Integration などで `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_
    - `supabase/03_rls_policies.sql`
    - `supabase/04_indexes.sql`
 5. Authentication > Providers で Email が有効になっていることを確認します。
+6. Authentication > Providers で Anonymous Sign-Ins を有効にします。ゲスト利用はSupabaseの匿名認証ユーザーとして保存されます。
 
 SQLには以下が含まれています。
 
@@ -62,11 +65,22 @@ SQLには以下が含まれています。
 
 招待コード参加は、全グループを検索可能にするRLSではなく、`join_group_by_invite_code` RPCで安全に処理しています。存在しない招待コードと参加済みグループはエラーになります。
 
+ゲストはSupabase Authの匿名ユーザーとして作成され、通常ユーザーと同じ `profiles`、`group_members`、`step_records` に保存されます。そのためDB上ではメール登録ユーザーと同じRLS・ランキング処理を利用します。
+
 ## ビルド
 
 ```bash
 npm run build
 ```
+
+## CI
+
+GitHub Actionsで、`main`へのpushとPull Requestごとに以下を実行します。
+
+- `npm ci`
+- `npm run build`（TypeScriptの型チェックとViteの本番ビルド）
+
+手動実行する場合は、GitHubのActions画面から`CI`を選択して実行できます。
 
 ## Vercelにデプロイする場合
 
