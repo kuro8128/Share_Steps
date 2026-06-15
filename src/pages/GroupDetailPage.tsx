@@ -140,28 +140,25 @@ export function GroupDetailPage({ date, groupId, navigate }: GroupDetailPageProp
               {ranking.length === 0 ? (
                 <EmptyState title="ランキングはまだありません" description="メンバーの歩数が読み込まれるとここに表示されます。" />
               ) : (
-                <div className="ranking-list">
+                <div className="ranking-viz-vertical">
                   {ranking.map((row) => (
-                    <div className="ranking-viz-row" key={row.userId}>
-                      <span className="rank-number">{row.rank}</span>
-                      <span className="viz-username">{row.username}</span>
-                      <div className="viz-bar-container">
-                        <span
-                          className="viz-target"
-                          style={{ left: `${row.targetPercent}%` }}
-                          title={`目標 ${row.targetSteps.toLocaleString()}歩`}
-                        />
+                    <div className="viz-column" key={row.userId}>
+                      <span className="viz-column-value">{row.steps.toLocaleString()}</span>
+                      <div className="viz-column-bar-container">
                         <div
                           aria-label={`${row.username}: ${row.steps.toLocaleString()}歩`}
-                          className={`viz-bar ${row.achieved ? 'achieved' : ''}`}
+                          className={`viz-column-bar ${row.achieved ? 'achieved' : ''}`}
                           role="img"
-                          style={{ '--bar-width': `${row.percent}%` } as CSSProperties}
+                          style={{ '--bar-height': `${row.percent}%` } as CSSProperties}
                         />
                       </div>
-                      <span className="viz-value">
-                        {row.steps.toLocaleString()}歩
-                        <small>目標 {row.targetSteps.toLocaleString()}歩</small>
-                      </span>
+                      <div className="viz-column-label">
+                        <span className="viz-column-rank">{row.rank}</span>
+                        <span className="viz-column-name" title={row.username}>
+                          {row.username}
+                        </span>
+                        <small>目標 {row.targetSteps.toLocaleString()}</small>
+                      </div>
                     </div>
                   ))}
                 </div>
