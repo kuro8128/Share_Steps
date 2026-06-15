@@ -71,6 +71,15 @@ SQLには以下が含まれています。
 npm run build
 ```
 
+## CI
+
+GitHub Actionsで、`main`へのpushとPull Requestごとに以下を実行します。
+
+- `npm ci`
+- `npm run build`（TypeScriptの型チェックとViteの本番ビルド）
+
+手動実行する場合は、GitHubのActions画面から`CI`を選択して実行できます。
+
 ## Vercelにデプロイする場合
 
 Viteの環境変数はビルド時に埋め込まれます。Vercelでは、デプロイ前に Project Settings > Environment Variables で以下を設定してください。
