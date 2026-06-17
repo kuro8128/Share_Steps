@@ -13,7 +13,7 @@ type HomePageProps = {
   profile: Profile;
 };
 
-type ViewType = 'day' | 'month' | 'year';
+type ViewType = 'W' | 'M' | '6M' | 'Y';
 
 export function HomePage({ date, userId, profile }: HomePageProps) {
   const [stepRecord, setStepRecord] = useState<StepRecord | null>(null);
@@ -24,11 +24,16 @@ export function HomePage({ date, userId, profile }: HomePageProps) {
   const [notice, setNotice] = useState<string | null>(null);
 
   const [history, setHistory] = useState<StepRecord[]>([]);
-  const [viewType, setViewType] = useState<ViewType>('day');
+  const [viewType, setViewType] = useState<ViewType>('W');
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [selectedDataPoint, setSelectedDataPoint] = useState<string | null>(null);
 
   const steps = stepRecord?.steps ?? 0;
   const achieved = steps >= profile.target_steps;
+
+  useEffect(() => {
+    setSelectedDataPoint(null);
+  }, [viewType]);
 
   useEffect(() => {
     let ignore = false;
@@ -74,74 +79,86 @@ export function HomePage({ date, userId, profile }: HomePageProps) {
       }
     }
     void loadHistory();
-  }, [userId, notice]); // Reload history when a new step is saved
+  }, [userId, notice]);
+
 
   const chartData = useMemo(() => {
-    if (history.length === 0) return [];
+    const today = new Date(date);
+    const items: {
+      label: string;
+      displayLabel: string;
+      steps: number;
+      targetSteps: number;
+      achieved: boolean;
+    }[] = [];
 
-    const grouped = new Map<string, { steps: number; count: number }>();
+    if (viewType === 'W' || viewType === 'M') {
+      const daysToShow = viewType === 'W' ? 7 : 30;
+      const historyMap = new Map(history.map((r) => [r.date, r.steps]));
 
-    history.forEach((record) => {
-      let key = record.date;
-      if (viewType === 'month') {
-        key = record.date.substring(0, 7); // YYYY-MM
-      } else if (viewType === 'year') {
-        key = record.date.substring(0, 4); // YYYY
+      for (let i = daysToShow - 1; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const s = historyMap.get(dateStr) ?? 0;
+        
+        items.push({
+          label: dateStr,
+          displayLabel: viewType === 'W' 
+            ? d.toLocaleDateString('ja-JP', { weekday: 'short' })
+            : d.getDate().toString(),
+          steps: s,
+          targetSteps: profile.target_steps,
+          achieved: s >= profile.target_steps,
+        });
       }
-
-      const existing = grouped.get(key) ?? { steps: 0, count: 0 };
-      grouped.set(key, {
-        steps: existing.steps + record.steps,
-        count: existing.count + 1,
+    } else {
+      const monthsToShow = viewType === '6M' ? 6 : 12;
+      const historyMap = new Map<string, number>();
+      history.forEach((r) => {
+        const monthKey = r.date.substring(0, 7);
+        historyMap.set(monthKey, (historyMap.get(monthKey) ?? 0) + r.steps);
       });
-    });
 
-    const items = Array.from(grouped.entries()).map(([label, data]) => {
-      let currentTarget = profile.target_steps;
-      let displayLabel = label;
+      for (let i = monthsToShow - 1; i >= 0; i--) {
+        const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const s = historyMap.get(monthKey) ?? 0;
+        
+        // Target for the month is target_steps * days in that month
+        const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+        const monthlyTarget = profile.target_steps * daysInMonth;
 
-      if (viewType === 'month') {
-        const [year, month] = label.split('-');
-        displayLabel = `${parseInt(month, 10)}月 合計`;
-        currentTarget = profile.target_steps * data.count;
-      } else if (viewType === 'year') {
-        displayLabel = `${label}年 合計`;
-        currentTarget = profile.target_steps * data.count;
+        items.push({
+          label: monthKey,
+          displayLabel: `${d.getMonth() + 1}月`,
+          steps: s,
+          targetSteps: monthlyTarget,
+          achieved: s >= monthlyTarget,
+        });
       }
-
-      return {
-        label,
-        displayLabel,
-        steps: data.steps,
-        averageSteps: Math.round(data.steps / data.count),
-        targetSteps: currentTarget,
-        achieved: data.steps >= currentTarget,
-      };
-    });
-
-    items.sort((a, b) => b.label.localeCompare(a.label));
-
-    let limitedItems = items;
-    if (viewType === 'day') {
-      limitedItems = items.slice(0, 7);
-    } else if (viewType === 'month') {
-      limitedItems = items.slice(0, 12);
     }
 
-    const maxSteps = Math.max(...limitedItems.map((item) => Math.max(item.steps, item.targetSteps)), 1);
 
-    return limitedItems.map((item) => ({
+    const maxSteps = Math.max(...items.map((item) => Math.max(item.steps, item.targetSteps)), 1);
+
+    return items.map((item) => ({
       ...item,
       percent: Math.min((item.steps / maxSteps) * 100, 100),
       targetPercent: Math.min((item.targetSteps / maxSteps) * 100, 100),
     }));
-  }, [history, viewType, profile.target_steps]);
+  }, [history, viewType, profile.target_steps, date]);
 
   const overallAverage = useMemo(() => {
     if (chartData.length === 0) return 0;
     const sum = chartData.reduce((acc, row) => acc + row.steps, 0);
     return Math.round(sum / chartData.length);
   }, [chartData]);
+
+  const selectedItem = useMemo(() => 
+    chartData.find(item => item.label === selectedDataPoint),
+    [chartData, selectedDataPoint]
+  );
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -161,8 +178,9 @@ export function HomePage({ date, userId, profile }: HomePageProps) {
     }
   }
 
+
   return (
-    <section className="page-stack">
+    <section className="page-stack" onClick={() => setSelectedDataPoint(null)}>
       <div className="page-title">
         <p>{date}</p>
         <h1>ホーム</h1>
@@ -183,7 +201,7 @@ export function HomePage({ date, userId, profile }: HomePageProps) {
         />
       </div>
 
-      <form className="panel form-stack" onSubmit={handleSubmit}>
+      <form className="panel form-stack" onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()}>
         <h2>歩数登録</h2>
         <label>
           この日の歩数
@@ -204,26 +222,29 @@ export function HomePage({ date, userId, profile }: HomePageProps) {
         </button>
       </form>
 
-      <section className="health-chart-card">
+      <section className="health-chart-card" onClick={(e) => e.stopPropagation()}>
         <div className="health-period-selector">
-          {(['day', 'month', 'year'] as ViewType[]).map((type) => (
+          {(['W', 'M', '6M', 'Y'] as ViewType[]).map((type) => (
             <button
               key={type}
               className={`health-period-button ${viewType === type ? 'active' : ''}`}
               type="button"
               onClick={() => setViewType(type)}
             >
-              {type === 'day' ? '日' : type === 'month' ? '月' : '年'}
+              {type}
             </button>
           ))}
         </div>
 
         <div className="health-chart-header">
           <span className="label">
-            {viewType === 'day' ? '日別平均' : viewType === 'month' ? '月別平均' : '年別平均'}
+            {selectedItem 
+              ? selectedItem.label 
+              : viewType === 'W' ? '週間平均' : viewType === 'M' ? '月間平均' : viewType === '6M' ? '6ヶ月平均' : '年間平均'
+            }
           </span>
           <div className="main-value">
-            {overallAverage.toLocaleString()}
+            {(selectedItem ? selectedItem.steps : overallAverage).toLocaleString()}
             <span>歩</span>
           </div>
         </div>
@@ -243,26 +264,38 @@ export function HomePage({ date, userId, profile }: HomePageProps) {
               <div className="health-chart-grid-line" />
               <div className="health-chart-grid-line" />
               <div className="health-chart-grid-line" />
-            </div>
-            {chartData.slice().reverse().map((row) => (
-              <div className="health-chart-bar-wrapper" key={row.label}>
-                <div
-                  className={`health-chart-bar ${row.achieved ? '' : 'not-achieved'}`}
-                  style={{ '--bar-height': `${row.percent}%` } as CSSProperties}
-                  title={`${row.displayLabel || row.label}: ${row.steps.toLocaleString()}歩`}
-                />
-                <span className="health-chart-axis-label">
-                  {viewType === 'day'
-                    ? row.label.substring(8) // Just day DD
-                    : viewType === 'month'
-                    ? `${parseInt(row.label.split('-')[1], 10)}月`
-                    : `${row.label}年`}
-                </span>
+              <div 
+                className="health-chart-avg-line" 
+                style={{ bottom: `${(overallAverage / Math.max(...chartData.map(d => Math.max(d.steps, d.targetSteps)))) * 100}%` } as CSSProperties}
+              >
+                <span>平均</span>
               </div>
-            ))}
+            </div>
+            <div className={`health-chart-bars ${viewType === 'M' ? 'compact' : ''}`}>
+              {chartData.map((row) => (
+                <div 
+                  className={`health-chart-bar-wrapper ${selectedDataPoint === row.label ? 'selected' : ''} ${selectedDataPoint && selectedDataPoint !== row.label ? 'dimmed' : ''}`} 
+                  key={row.label}
+                  onClick={() => setSelectedDataPoint(selectedDataPoint === row.label ? null : row.label)}
+                >
+                  <div
+                    className={`health-chart-bar ${row.achieved ? '' : 'not-achieved'}`}
+                    style={{ '--bar-height': `${row.percent}%` } as CSSProperties}
+                    title={`${row.label}: ${row.steps.toLocaleString()}歩`}
+                  />
+                  <span className="health-chart-axis-label">
+                    {viewType === 'M' 
+                      ? (parseInt(row.label.split('-')[2]) % 5 === 0 || row.label.split('-')[2] === '01' ? row.displayLabel : '')
+                      : row.displayLabel
+                    }
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </section>
     </section>
   );
 }
+

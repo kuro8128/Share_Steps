@@ -18,6 +18,11 @@ export function GroupDetailPage({ date, groupId, navigate }: GroupDetailPageProp
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSelectedMemberId(null);
+  }, [date, groupId]);
 
   useEffect(() => {
     let ignore = false;
@@ -73,6 +78,7 @@ export function GroupDetailPage({ date, groupId, navigate }: GroupDetailPageProp
     }
   }
 
+
   const ranking = useMemo(() => {
     if (rankingData.length === 0) {
       return [];
@@ -87,8 +93,18 @@ export function GroupDetailPage({ date, groupId, navigate }: GroupDetailPageProp
     }));
   }, [rankingData]);
 
+  const groupTotalSteps = useMemo(() => 
+    rankingData.reduce((acc, row) => acc + row.steps, 0),
+    [rankingData]
+  );
+
+  const selectedMember = useMemo(() => 
+    ranking.find(row => row.userId === selectedMemberId),
+    [ranking, selectedMemberId]
+  );
+
   return (
-    <section className="page-stack">
+    <section className="page-stack" onClick={() => setSelectedMemberId(null)}>
       <button className="back-button" type="button" onClick={() => navigate('/groups')}>
         <ArrowLeft size={18} aria-hidden="true" />
         <span>グループ一覧へ</span>
@@ -117,14 +133,14 @@ export function GroupDetailPage({ date, groupId, navigate }: GroupDetailPageProp
           </section>
 
           <div className="split-layout">
-            <section className="panel">
+            <section className="panel" onClick={(e) => e.stopPropagation()}>
               <div className="section-heading">
                 <Users size={22} aria-hidden="true" />
                 <h2>メンバー</h2>
               </div>
               <div className="member-list">
                 {members.map((member) => (
-                  <div className="member-row" key={member.id}>
+                  <div className={`member-row ${selectedMemberId === member.user_id ? 'selected' : ''}`} key={member.id} onClick={() => setSelectedMemberId(member.user_id)}>
                     <span>{member.profile?.username ?? '未設定ユーザー'}</span>
                     <small>目標 {Number(member.profile?.target_steps ?? 8000).toLocaleString()}歩</small>
                   </div>
@@ -132,35 +148,51 @@ export function GroupDetailPage({ date, groupId, navigate }: GroupDetailPageProp
               </div>
             </section>
 
-            <section className="panel">
+            <section className="panel" onClick={(e) => e.stopPropagation()}>
               <div className="section-heading">
                 <Trophy size={22} aria-hidden="true" />
-                <h2>この日のランキング</h2>
+                <h2>ランキング</h2>
               </div>
               {ranking.length === 0 ? (
                 <EmptyState title="ランキングはまだありません" description="メンバーの歩数が読み込まれるとここに表示されます。" />
               ) : (
-                <div className="ranking-viz-vertical">
-                  {ranking.map((row) => (
-                    <div className="viz-column" key={row.userId}>
-                      <span className="viz-column-value">{row.steps.toLocaleString()}</span>
-                      <div className="viz-column-bar-container">
-                        <div
-                          aria-label={`${row.username}: ${row.steps.toLocaleString()}歩`}
-                          className={`viz-column-bar ${row.achieved ? 'achieved' : ''}`}
-                          role="img"
-                          style={{ '--bar-height': `${row.percent}%` } as CSSProperties}
-                        />
-                      </div>
-                      <div className="viz-column-label">
-                        <span className="viz-column-rank">{row.rank}</span>
-                        <span className="viz-column-name" title={row.username}>
-                          {row.username}
-                        </span>
-                        <small>目標 {row.targetSteps.toLocaleString()}</small>
-                      </div>
+                <div className="health-chart-card group-ranking-card">
+                  <div className="health-chart-header">
+                    <span className="label">
+                      {selectedMember ? selectedMember.username : 'グループ合計'}
+                    </span>
+                    <div className="main-value">
+                      {(selectedMember ? selectedMember.steps : groupTotalSteps).toLocaleString()}
+                      <span>歩</span>
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="health-chart-container">
+                    <div className="health-chart-grid">
+                      <div className="health-chart-grid-line" />
+                      <div className="health-chart-grid-line" />
+                      <div className="health-chart-grid-line" />
+                      <div className="health-chart-grid-line" />
+                    </div>
+                    <div className="health-chart-bars">
+                      {ranking.map((row) => (
+                        <div 
+                          className={`health-chart-bar-wrapper ${selectedMemberId === row.userId ? 'selected' : ''} ${selectedMemberId && selectedMemberId !== row.userId ? 'dimmed' : ''}`} 
+                          key={row.userId}
+                          onClick={() => setSelectedMemberId(selectedMemberId === row.userId ? null : row.userId)}
+                        >
+                          <div
+                            className={`health-chart-bar ${row.achieved ? '' : 'not-achieved'}`}
+                            style={{ '--bar-height': `${row.percent}%` } as CSSProperties}
+                            title={`${row.username}: ${row.steps.toLocaleString()}歩`}
+                          />
+                          <span className="health-chart-axis-label">
+                            {row.rank}位
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
             </section>
@@ -170,3 +202,4 @@ export function GroupDetailPage({ date, groupId, navigate }: GroupDetailPageProp
     </section>
   );
 }
+
