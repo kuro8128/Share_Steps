@@ -379,8 +379,7 @@ input:focus {
 }
 
 .group-row,
-.member-row,
-.ranking-row {
+.member-row {
   width: 100%;
   min-height: 58px;
   display: flex;
@@ -393,14 +392,27 @@ input:focus {
   padding: 12px 14px;
   color: #1f2933;
   text-align: left;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.group-row span,
+.member-row:hover {
+  border-color: #0b7a75;
+  background: #f3fbf9;
+}
+
+.member-row.selected {
+  border-color: #0b7a75;
+  background: #f3fbf9;
+  box-shadow: 0 0 0 1px #0b7a75;
+}
+
 .member-row span,
 .ranking-user {
   display: grid;
   gap: 4px;
 }
+
 
 small {
   color: #687587;
@@ -689,113 +701,19 @@ small {
 /* Health App Style Chart */
 .health-chart-card {
   display: grid;
-  gap: 16px;
+  gap: 24px;
   padding: 24px;
   background: #ffffff;
   border: 1px solid #e3e8ef;
-  border-radius: 16px;
+  border-radius: 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
-}
-
-.health-chart-header {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.health-chart-header .label {
-  font-size: 0.85rem;
-  font-weight: 800;
-  color: #687587;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.health-chart-header .main-value {
-  font-size: 2rem;
-  font-weight: 900;
-  color: #14213d;
-}
-
-.health-chart-header .main-value span {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #687587;
-  margin-left: 4px;
-}
-
-.health-chart-container {
-  height: 240px;
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  padding: 20px 0 30px;
-  margin-top: 10px;
-}
-
-.health-chart-grid {
-  position: absolute;
-  inset: 20px 0 30px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  pointer-events: none;
-}
-
-.health-chart-grid-line {
-  width: 100%;
-  height: 1px;
-  background: #f0f2f5;
-  position: relative;
-}
-
-.health-chart-bar-wrapper {
-  flex: 1;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: center;
-  position: relative;
-  min-width: 0;
-}
-
-.health-chart-bar {
-  width: 70%;
-  max-width: 32px;
-  height: var(--bar-height);
-  background: #0b7a75;
-  border-radius: 4px 4px 0 0;
-  transition: height 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-  opacity: 0.85;
-}
-
-.health-chart-bar:hover {
-  opacity: 1;
-  transform: scaleX(1.05);
-}
-
-.health-chart-bar.not-achieved {
-  background: #687587;
-  opacity: 0.4;
-}
-
-.health-chart-axis-label {
-  position: absolute;
-  bottom: -25px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #8c9aaf;
-  white-space: nowrap;
 }
 
 .health-period-selector {
   display: flex;
   background: #f1f3f5;
-  padding: 4px;
+  padding: 2px;
   border-radius: 10px;
-  margin-bottom: 8px;
 }
 
 .health-period-button {
@@ -807,7 +725,7 @@ small {
   font-size: 0.85rem;
   font-weight: 800;
   color: #536171;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .health-period-button.active {
@@ -816,14 +734,154 @@ small {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+.health-chart-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.health-chart-header .label {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #687587;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.health-chart-header .main-value {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: #14213d;
+  letter-spacing: -0.02em;
+}
+
+.health-chart-header .main-value span {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #687587;
+  margin-left: 6px;
+}
+
+.health-chart-container {
+  height: 220px;
+  position: relative;
+  margin-top: 10px;
+}
+
+.health-chart-grid {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.health-chart-grid-line {
+  width: 100%;
+  height: 1px;
+  background: #f0f2f5;
+}
+
+.health-chart-avg-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  border-top: 1.5px dashed #0b7a75;
+  opacity: 0.4;
+  z-index: 2;
+  pointer-events: none;
+  transition: bottom 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.health-chart-avg-line span {
+  position: absolute;
+  right: 0;
+  top: -18px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: #0b7a75;
+  background: #ffffff;
+  padding: 0 4px;
+}
+
+.health-chart-bars {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding-bottom: 25px; /* Space for labels */
+}
+
+.health-chart-bars.compact {
+  gap: 2px;
+}
+
+.health-chart-bar-wrapper {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  position: relative;
+  min-width: 0;
+  cursor: pointer;
+  transition: opacity 0.3s;
+}
+
+.health-chart-bar-wrapper.dimmed {
+  opacity: 0.3;
+}
+
+.health-chart-bar-wrapper.selected::after {
+  content: "";
+  position: absolute;
+  inset: -4px -2px 20px -2px;
+  background: rgba(11, 122, 117, 0.08);
+  border-radius: 4px;
+  z-index: 0;
+}
+
+.health-chart-bar {
+  width: 80%;
+  max-width: 32px;
+  height: var(--bar-height);
+  background: #0b7a75;
+  border-radius: 4px 4px 2px 2px;
+  transition: height 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  z-index: 1;
+}
+
+.health-chart-bar.not-achieved {
+  background: #cbd5e1;
+}
+
+.health-chart-bar-wrapper.selected .health-chart-bar {
+  box-shadow: 0 0 0 2px #0b7a75;
+}
+
+.health-chart-axis-label {
+  position: absolute;
+  bottom: 0;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #8c9aaf;
+  white-space: nowrap;
+}
+
 @media (max-width: 480px) {
-  .health-chart-bar {
-    width: 85%;
-  }
-  .health-chart-container {
+  .health-chart-bars {
     gap: 4px;
+  }
+  .health-chart-bars.compact {
+    gap: 1px;
   }
   .health-chart-axis-label {
     font-size: 0.65rem;
   }
 }
+
