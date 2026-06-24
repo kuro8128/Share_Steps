@@ -407,10 +407,25 @@ input:focus {
   box-shadow: 0 0 0 1px #0b7a75;
 }
 
+.member-row.current-user {
+  border-color: #f4c430;
+  background: #fffdf3;
+}
+
 .member-row span,
 .ranking-user {
   display: grid;
   gap: 4px;
+}
+
+.you-label {
+  width: max-content;
+  border-radius: 999px;
+  padding: 2px 8px;
+  color: #875a00;
+  background: #ffe7a3;
+  font-size: 0.72rem;
+  font-weight: 900;
 }
 
 
@@ -441,6 +456,79 @@ small {
 .invite-band strong {
   color: #14213d;
   font-size: 1.6rem;
+}
+
+.group-total-band {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 20px;
+  border: 1px solid #d7e6e3;
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(11, 122, 117, 0.1), rgba(244, 196, 48, 0.12)),
+    #ffffff;
+  box-shadow: 0 12px 28px rgba(18, 38, 63, 0.06);
+}
+
+.group-total-band > div:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.group-total-label {
+  color: #536171;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.group-total-band strong {
+  color: #14213d;
+  font-size: 2.35rem;
+  line-height: 1;
+}
+
+.group-total-band strong small {
+  margin-left: 6px;
+  color: #687587;
+  font-size: 1rem;
+}
+
+.group-total-stats {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+}
+
+.group-total-stats div {
+  min-width: 82px;
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid rgba(20, 33, 61, 0.08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.group-total-stats dt {
+  color: #687587;
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.group-total-stats dd {
+  margin: 0;
+  color: #14213d;
+  font-weight: 950;
+}
+
+.is-positive {
+  color: #087443 !important;
+}
+
+.is-negative {
+  color: #b42318 !important;
 }
 
 .rank-number {
@@ -701,12 +789,15 @@ small {
 /* Health App Style Chart */
 .health-chart-card {
   display: grid;
-  gap: 24px;
-  padding: 24px;
-  background: #ffffff;
-  border: 1px solid #e3e8ef;
-  border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  gap: 18px;
+}
+
+.group-ranking-card {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .health-period-selector {
@@ -737,7 +828,11 @@ small {
 .health-chart-header {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid #e3e8ef;
+  border-radius: 8px;
+  background: #fbfcfe;
 }
 
 .health-chart-header .label {
@@ -752,7 +847,7 @@ small {
   font-size: 2.2rem;
   font-weight: 900;
   color: #14213d;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .health-chart-header .main-value span {
@@ -760,6 +855,49 @@ small {
   font-weight: 700;
   color: #687587;
   margin-left: 6px;
+}
+
+.main-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.selected-ranking-name {
+  color: #0b7a75;
+  font-size: 0.95rem;
+}
+
+.ranking-delta-chip {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border: 1px solid #d5dde8;
+  border-radius: 999px;
+  padding: 0 10px;
+  color: #536171;
+  background: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.ranking-delta-chip.is-positive {
+  border-color: #a6e6c5;
+  background: #e9fbf1;
+}
+
+.ranking-delta-chip.is-negative {
+  border-color: #ffc3bd;
+  background: #fff0ef;
+}
+
+.ranking-delta-chip.compact {
+  min-height: 26px;
+  padding-inline: 8px;
 }
 
 .health-chart-container {
@@ -845,6 +983,40 @@ small {
   z-index: 0;
 }
 
+.health-chart-bar-wrapper.current-user::before {
+  content: "";
+  position: absolute;
+  inset: auto 10% 22px 10%;
+  height: 4px;
+  border-radius: 999px;
+  background: #f4c430;
+  z-index: 2;
+}
+
+.health-chart-rank-badge {
+  position: absolute;
+  top: 2px;
+  min-width: 26px;
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dde5ef;
+  border-radius: 999px;
+  color: #536171;
+  background: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 950;
+  z-index: 2;
+}
+
+.health-chart-rank-badge.winner {
+  border-color: #f4c430;
+  color: #875a00;
+  background: #fff1b8;
+  box-shadow: 0 6px 16px rgba(244, 196, 48, 0.32);
+}
+
 .health-chart-bar {
   width: 80%;
   max-width: 32px;
@@ -864,12 +1036,109 @@ small {
   box-shadow: 0 0 0 2px #0b7a75;
 }
 
+.health-chart-bar-wrapper.current-user .health-chart-bar {
+  background: #2f80ed;
+}
+
 .health-chart-axis-label {
   position: absolute;
   bottom: 0;
   font-size: 0.75rem;
   font-weight: 800;
   color: #8c9aaf;
+  white-space: nowrap;
+}
+
+.ranking-game-list {
+  display: grid;
+  gap: 8px;
+}
+
+.ranking-game-row {
+  width: 100%;
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e3e8ef;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #1f2933;
+  background: #ffffff;
+  text-align: left;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    box-shadow 0.2s,
+    transform 0.2s;
+}
+
+.ranking-game-row:hover,
+.ranking-game-row.selected {
+  border-color: #0b7a75;
+  background: #f3fbf9;
+  box-shadow: 0 8px 20px rgba(18, 38, 63, 0.08);
+  transform: translateY(-1px);
+}
+
+.ranking-game-row.winner {
+  border-color: #f4c430;
+  background: #fffdf3;
+}
+
+.ranking-game-row.current-user {
+  box-shadow: inset 4px 0 0 #2f80ed;
+}
+
+.ranking-game-rank {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #14213d;
+  font-weight: 950;
+}
+
+.ranking-game-row.winner .ranking-game-rank {
+  color: #875a00;
+  background: #ffe7a3;
+}
+
+.ranking-game-user {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ranking-game-user strong {
+  overflow: hidden;
+  color: #14213d;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.achievement-badge {
+  min-height: 26px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  padding: 0 9px;
+  color: #095c37;
+  background: #dcfae6;
+  font-size: 0.78rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.ranking-game-steps {
+  color: #14213d;
+  font-size: 0.98rem;
+  text-align: right;
   white-space: nowrap;
 }
 
@@ -882,6 +1151,70 @@ small {
   }
   .health-chart-axis-label {
     font-size: 0.65rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .group-total-band {
+    grid-template-columns: 1fr;
+  }
+
+  .group-total-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .main-value-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ranking-game-row {
+    grid-template-columns: 42px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "rank user steps"
+      "rank badge delta";
+  }
+
+  .ranking-game-rank {
+    grid-area: rank;
+  }
+
+  .ranking-game-user {
+    grid-area: user;
+  }
+
+  .achievement-badge {
+    grid-area: badge;
+    justify-self: start;
+  }
+
+  .ranking-delta-chip.compact {
+    grid-area: delta;
+    justify-self: end;
+  }
+
+  .ranking-game-steps {
+    grid-area: steps;
+  }
+}
+
+@media (max-width: 520px) {
+  .group-total-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .ranking-game-row {
+    grid-template-columns: 38px minmax(0, 1fr);
+    grid-template-areas:
+      "rank user"
+      "rank steps"
+      "badge delta";
+  }
+
+  .ranking-game-steps {
+    justify-self: start;
+    text-align: left;
   }
 }
 
