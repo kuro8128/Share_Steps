@@ -95,6 +95,28 @@ export function GroupsPage({ userId, navigate }: GroupsPageProps) {
       <Message message={error} tone="error" />
       <Message message={notice} tone="success" />
 
+      <section className="panel">
+        <div className="section-heading">
+          <Users size={22} aria-hidden="true" />
+          <h2>参加中グループ</h2>
+        </div>
+        {loading ? <p className="loading-text">グループを読み込み中...</p> : null}
+        {!loading && groups.length === 0 ? (
+          <EmptyState title="まだグループがありません" description="グループを作成するか、友達から届いた招待コードで参加できます。" />
+        ) : null}
+        <div className="group-list">
+          {groups.map((group) => (
+            <button className="group-row" key={group.id} type="button" onClick={() => navigate(`/groups/${group.id}`)}>
+              <span>
+                <strong>{group.name}</strong>
+                <small>招待コード: {group.invite_code}</small>
+              </span>
+              <span className="row-arrow">詳細</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
       <div className="split-layout">
         <section className="panel form-stack">
           <h2>グループ作成</h2>
@@ -134,28 +156,6 @@ export function GroupsPage({ userId, navigate }: GroupsPageProps) {
           </form>
         </section>
       </div>
-
-      <section className="panel">
-        <div className="section-heading">
-          <Users size={22} aria-hidden="true" />
-          <h2>参加中グループ</h2>
-        </div>
-        {loading ? <p className="loading-text">グループを読み込み中...</p> : null}
-        {!loading && groups.length === 0 ? (
-          <EmptyState title="まだグループがありません" description="グループを作成するか、友達から届いた招待コードで参加できます。" />
-        ) : null}
-        <div className="group-list">
-          {groups.map((group) => (
-            <button className="group-row" key={group.id} type="button" onClick={() => navigate(`/groups/${group.id}`)}>
-              <span>
-                <strong>{group.name}</strong>
-                <small>招待コード: {group.invite_code}</small>
-              </span>
-              <span className="row-arrow">詳細</span>
-            </button>
-          ))}
-        </div>
-      </section>
     </section>
   );
 }

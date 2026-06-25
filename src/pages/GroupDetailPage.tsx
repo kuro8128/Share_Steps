@@ -163,17 +163,6 @@ export function GroupDetailPage({ currentUserId, date, groupId, navigate }: Grou
 
       {group ? (
         <>
-          <section className="invite-band">
-            <span>
-              <small>招待コード</small>
-              <strong>{group.invite_code}</strong>
-            </span>
-            <button className="secondary-button" type="button" onClick={copyInviteCode}>
-              <Copy size={18} aria-hidden="true" />
-              <span>コピー</span>
-            </button>
-          </section>
-
           <section className="group-total-band" onClick={(event) => event.stopPropagation()}>
             <div>
               <span className="group-total-label">グループ合計歩数</span>
@@ -329,6 +318,17 @@ export function GroupDetailPage({ currentUserId, date, groupId, navigate }: Grou
               )}
             </section>
           </div>
+
+          <section className="invite-band">
+            <span>
+              <small>招待コード</small>
+              <strong>{group.invite_code}</strong>
+            </span>
+            <button className="secondary-button" type="button" onClick={copyInviteCode}>
+              <Copy size={18} aria-hidden="true" />
+              <span>コピー</span>
+            </button>
+          </section>
         </>
       ) : null}
     </section>
