@@ -1,7 +1,8 @@
+cat > src/pages/MyPage.tsx << 'EOF'
 import { FormEvent, useEffect, useState } from 'react';
-import { LogOut, Save } from 'lucide-react';
+import { KeyRound, LogOut, Save } from 'lucide-react';
 import { Message } from '../components/Message';
-import { signOut, updateProfile } from '../lib/api';
+import { getCurrentUser, signOut, updatePassword, updateProfile } from '../lib/api';
 import { parsePositiveInteger } from '../lib/validation';
 import type { Profile } from '../types';
 
@@ -18,23 +19,35 @@ export function MyPage({ profile, onProfileUpdated }: MyPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
+  const [email, setEmail] = useState<string | null>(null);
+  const [isAnonymous, setIsAnonymous] = useState(false);
+
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordNotice, setPasswordNotice] = useState<string | null>(null);
+
   useEffect(() => {
     setUsername(profile.username);
     setTargetSteps(profile.target_steps.toString());
   }, [profile]);
+
+  useEffect(() => {
+    getCurrentUser().then((user) => {
+      setEmail(user?.email ?? null);
+      setIsAnonymous(user?.is_anonymous ?? false);
+    });
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
     setError(null);
     setNotice(null);
-
     try {
       const trimmedUsername = username.trim();
-      if (!trimmedUsername) {
-        throw new Error('ユーザー名を入力してください。');
-      }
-
+      if (!trimmedUsername) throw new Error('ユーザー名を入力してください。');
       const parsedTargetSteps = parsePositiveInteger(targetSteps, '目標歩数');
       const saved = await updateProfile(profile.id, trimmedUsername, parsedTargetSteps);
       onProfileUpdated(saved);
@@ -46,10 +59,34 @@ export function MyPage({ profile, onProfileUpdated }: MyPageProps) {
     }
   }
 
+  async function handlePasswordChange(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPasswordError(null);
+    setPasswordNotice(null);
+    if (newPassword !== confirmPassword) {
+      setPasswordError('パスワードが一致しません。');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordError('6文字以上で入力してください。');
+      return;
+    }
+    setPasswordSaving(true);
+    try {
+      await updatePassword(newPassword);
+      setPasswordNotice('パスワードを変更しました。');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      setPasswordError(err instanceof Error ? err.message : 'パスワードの変更に失敗しました。');
+    } finally {
+      setPasswordSaving(false);
+    }
+  }
+
   async function handleSignOut() {
     setLoggingOut(true);
     setError(null);
-
     try {
       await signOut();
     } catch (err) {
@@ -93,6 +130,46 @@ export function MyPage({ profile, onProfileUpdated }: MyPageProps) {
         <Message message={notice} tone="success" />
       </section>
 
+      <section className="panel form-stack">
+        <h2>アカウント情報</h2>
+        <p>
+          メールアドレス：
+          {isAnonymous ? 'ゲストユーザー（未登録）' : (email ?? '取得中...')}
+        </p>
+      </section>
+
+      {!isAnonymous && (
+        <section className="panel form-stack">
+          <h2>パスワード変更</h2>
+          <form className="form-stack compact" onSubmit={handlePasswordChange}>
+            <label>
+              新しいパスワード
+              <input
+                required
+                type="password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+              />
+            </label>
+            <label>
+              パスワード（確認）
+              <input
+                required
+                type="password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+              />
+            </label>
+            <button className="primary-button" disabled={passwordSaving} type="submit">
+              <KeyRound size={18} aria-hidden="true" />
+              <span>{passwordSaving ? '変更中...' : 'パスワードを変更する'}</span>
+            </button>
+          </form>
+          <Message message={passwordError} tone="error" />
+          <Message message={passwordNotice} tone="success" />
+        </section>
+      )}
+
       <section className="panel">
         <button className="danger-button" disabled={loggingOut} type="button" onClick={handleSignOut}>
           <LogOut size={18} aria-hidden="true" />
@@ -102,3 +179,4 @@ export function MyPage({ profile, onProfileUpdated }: MyPageProps) {
     </section>
   );
 }
+EOF

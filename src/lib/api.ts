@@ -357,3 +357,15 @@ export async function getGroupRanking(groupId: string, date: string) {
       rank: index + 1,
     }));
 }
+
+export async function getCurrentUser() {
+  const { data, error } = await supabase.auth.getUser();
+  if (error) throw new Error(error.message);
+  return data.user;
+}
+
+export async function updatePassword(newPassword: string) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw new Error(error.message);
+}
+EOF
